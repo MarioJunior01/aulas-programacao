@@ -4,29 +4,70 @@
  */
 package ifpr.crudtb.usuario;
 
+import ifpr.crudtb.usuario.dao.UsuarioDAO;
 import java.awt.Color;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import javax.swing.BorderFactory;
+import javax.swing.JOptionPane;
 import javax.swing.border.Border;
 
-/**
- *
- * @author IFPR
- */
 public class UsuarioFormDialog extends javax.swing.JDialog {
-
+    
     private Border bordaOriginal;
     private Border bordaVermelha;
+    private Usuario usuario;
+    private UsuarioDAO usuarioDao;
     
-    /**
-     * Creates new form UsuarioFormDialog
-     */
     public UsuarioFormDialog(java.awt.Frame parent, boolean modal) {
         super(parent, modal);
         initComponents();
         bordaOriginal = nomeTF.getBorder();
         bordaVermelha = BorderFactory.createLineBorder(Color.RED);
-
+        usuario = new Usuario();
+        usuarioDao = new UsuarioDAO();
         
+    }
+    
+    public void setUsuario(Usuario usuario) {
+        this.usuario = usuario;
+        
+    }
+    
+    public void formToObject() {
+        usuario.setNome(nomeTF.getText().trim());
+        usuario.setCpf(cpfTF.getText().trim());
+        usuario.setEmail(emailTF.getText().trim());
+        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+        String campoDataNasc = dataNascimentoTF.getText().trim();
+        LocalDate dtNasc = LocalDate.parse(campoDataNasc, dtf);
+        if (femininoRB.isSelected()) {
+            usuario.setSexo(SexoPessoa.FEMININO);
+        } else if (masculinoRB.isSelected()) {
+            usuario.setSexo(SexoPessoa.MASCULINO);
+        } else {
+            usuario.setSexo(SexoPessoa.NAO_INFORMADO);
+        }
+    }
+    
+    public void limparCampos() {
+        apagarTextoCampos();
+        setarBordaOriginal();
+    }
+    
+    private void apagarTextoCampos() {
+        nomeTF.setText("");
+        emailTF.setText("");
+        cpfTF.setText("");
+        dataNascimentoTF.setText("");
+        sexoGroup.clearSelection();
+    }
+    
+    private void setarBordaOriginal() {
+        nomeTF.setBorder(bordaOriginal);
+        emailTF.setBorder(bordaOriginal);
+        cpfTF.setBorder(bordaOriginal);
+        dataNascimentoTF.setBorder(bordaOriginal);
     }
 
     /**
@@ -38,6 +79,7 @@ public class UsuarioFormDialog extends javax.swing.JDialog {
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
+        sexoGroup = new javax.swing.ButtonGroup();
         painelPrincipal = new javax.swing.JPanel();
         jLabel1 = new javax.swing.JLabel();
         jLabel2 = new javax.swing.JLabel();
@@ -94,16 +136,35 @@ public class UsuarioFormDialog extends javax.swing.JDialog {
         jLabel8.setFont(new java.awt.Font("Segoe UI", 1, 12)); // NOI18N
         jLabel8.setText("* Campos obrigatórios");
 
+        try {
+            cpfTF.setFormatterFactory(new javax.swing.text.DefaultFormatterFactory(new javax.swing.text.MaskFormatter("###.###.###-##")));
+        } catch (java.text.ParseException ex) {
+            ex.printStackTrace();
+        }
+        cpfTF.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                cpfTFActionPerformed(evt);
+            }
+        });
+
+        try {
+            dataNascimentoTF.setFormatterFactory(new javax.swing.text.DefaultFormatterFactory(new javax.swing.text.MaskFormatter("##/##/####")));
+        } catch (java.text.ParseException ex) {
+            ex.printStackTrace();
+        }
         dataNascimentoTF.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 dataNascimentoTFActionPerformed(evt);
             }
         });
 
+        sexoGroup.add(femininoRB);
         femininoRB.setText("Feminino");
 
+        sexoGroup.add(masculinoRB);
         masculinoRB.setText("Masculino");
 
+        sexoGroup.add(naoInformadoRB);
         naoInformadoRB.setText("Não informado");
 
         javax.swing.GroupLayout painelPrincipalLayout = new javax.swing.GroupLayout(painelPrincipal);
@@ -212,45 +273,70 @@ public class UsuarioFormDialog extends javax.swing.JDialog {
     }//GEN-LAST:event_cancelarUsuarioBTActionPerformed
 
     private void salvarUsuarioBTActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_salvarUsuarioBTActionPerformed
-        if ( validacaoOK() ) {
+        if (validacaoOK()) {
+            formToObject();
+            if (usuario.getId() != 0) {
+                
+                usuarioDao.update(usuario);
+            } else {
+                usuarioDao.create(usuario);
+                
+            }
+            JOptionPane.showMessageDialog(this,"Dados  Salvos com sucesso","Sucesso",JOptionPane.INFORMATION_MESSAGE);
+            limparCampos();
+            this.dispose();
+
             // salvar ou atualizar no BD
-        }
-        else {
+        } else {
+            JOptionPane.showMessageDialog(this, "Preecha os campos em vermelho ", "Erro de validação ", JOptionPane.ERROR_MESSAGE);
             // Erro de validação
             // mostrar msg para o usuário
         }
     }//GEN-LAST:event_salvarUsuarioBTActionPerformed
 
-    private boolean validacaoOK()
-    {
+    private void cpfTFActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cpfTFActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_cpfTFActionPerformed
+    
+    private boolean validacaoOK() {
         boolean isFormValido = true;
         // nome não pode estar vazio
-        if ( nomeTF.getText().trim().equals("") )
-        {
+        if (nomeTF.getText().trim().equals("")) {
             isFormValido = false;
             nomeTF.setBorder(bordaVermelha);
+        } else {
+            nomeTF.setBorder(bordaOriginal);
         }
         // email não pode estar vazio e deve terminar
         // com @ifpr.edu.br
-        if (emailTF.getText().trim().equals("")|| emailTF.getText().trim().toLowerCase().contains("@ifpr.edu.br")){
+        if (emailTF.getText().trim().equals("") || !emailTF.getText().trim().toLowerCase().contains("@ifpr.edu.br")) {
             emailTF.setBorder(bordaVermelha);
-            isFormValido= false;
+            isFormValido = false;
             
+        } else {
+            emailTF.setBorder(bordaOriginal);
         }
         
-        if (cpfTF.getText().trim().equals("")|| cpfTF.getText().trim().length()!=14){
+        if (cpfTF.getText().trim().equals("") || cpfTF.getText().trim().length() != 14) {
             isFormValido = false;
             cpfTF.setBorder(bordaVermelha);
+        } else {
+            cpfTF.setBorder(bordaOriginal);
         }
         
+        if (dataNascimentoTF.getText().trim().length() != 10) {
+            isFormValido = false;
+            dataNascimentoTF.setBorder(bordaVermelha);
+        } else {
+            dataNascimentoTF.setBorder(bordaOriginal);
+        }
+
         // cpf não pode estar vazio e deve ter tamanho 11
-        
         // data não pode ser vazia e deve ser data valida
-        
         return isFormValido;
     }
-    
-    
+
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton cancelarUsuarioBT;
     private javax.swing.JFormattedTextField cpfTF;
@@ -270,5 +356,6 @@ public class UsuarioFormDialog extends javax.swing.JDialog {
     private javax.swing.JTextField nomeTF;
     private javax.swing.JPanel painelPrincipal;
     private javax.swing.JButton salvarUsuarioBT;
+    private javax.swing.ButtonGroup sexoGroup;
     // End of variables declaration//GEN-END:variables
 }

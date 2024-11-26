@@ -192,10 +192,13 @@ public class UsuarioJIF extends javax.swing.JInternalFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void novoUsuarioBTActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_novoUsuarioBTActionPerformed
+        usuarioForm.limparCampos();
+        usuarioForm.setUsuario(new Usuario());
         usuarioForm.setVisible(true);
     }//GEN-LAST:event_novoUsuarioBTActionPerformed
 
     private void editarUsuarioBTActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_editarUsuarioBTActionPerformed
+        usuarioForm.limparCampos();
         usuarioForm.setVisible(true);
     }//GEN-LAST:event_editarUsuarioBTActionPerformed
 
